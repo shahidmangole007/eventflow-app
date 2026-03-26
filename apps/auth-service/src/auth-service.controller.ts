@@ -1,18 +1,28 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthServiceService } from './auth-service.service';
-import { SERVICE_PORTS } from '@app/common';
+import { LoginDto, RegisterDto, SERVICE_PORTS } from '@app/common';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller()
 export class AuthServiceController {
   constructor(private readonly authServiceService: AuthServiceService) {}
+ 
+  @Post('register')
+  async register(@Body() dto : RegisterDto ) {
+    console.log(dto);
+    
+    return this.authServiceService.register(dto.email, dto.password, dto.name);
+  }
 
-  @Get()
-   getHello(): string {
-     return `Auth Service is running on port ${SERVICE_PORTS.AUTH_SERVICE}`;
-   } 
+  @Post('login')
+  async login(@Body() dto : LoginDto) {
+    return this.authServiceService.login(dto.email, dto.password);
+  }
 
-   @Post('/register')
-    registerUser(@Body() body: { email: string }) {
-    return  this.authServiceService.simulateUserRegistration(body.email);
-   }
+  @UseGuards(AuthGuard('jwt'))
+  @Get('profile')
+  async profile(@Request() req : { user : {userId : string}}) {
+    return this.authServiceService.getProfile(req.user.userId);
+  }
+  
 }
