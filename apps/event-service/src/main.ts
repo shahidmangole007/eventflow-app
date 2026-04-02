@@ -1,11 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { EventServiceModule } from './event-service.module';
 import { SERVICE_PORTS } from '@app/common';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
+  const app = await NestFactory.create(EventServiceModule);
   
     app.useGlobalPipes(
       new ValidationPipe({
@@ -14,8 +13,8 @@ async function bootstrap() {
         transform: true,
       }));
   
-    await app.listen(process.env.port ?? SERVICE_PORTS.API_GATEWAY);
-    console.log(`Api Gateway Service is running on port ${process.env.PORT ?? SERVICE_PORTS.API_GATEWAY}`);
+    await app.listen(process.env.port ?? SERVICE_PORTS.EVENT_SERVICE);
+    console.log(`Event Service is running on port ${SERVICE_PORTS.EVENT_SERVICE}`);
   
 }
 bootstrap();
