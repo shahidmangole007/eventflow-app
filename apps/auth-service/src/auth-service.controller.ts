@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AuthServiceService } from './auth-service.service';
 import { SERVICE_PORTS } from '@app/common';
 
@@ -10,4 +10,9 @@ export class AuthServiceController {
    getHello(): string {
      return `Auth Service is running on port ${SERVICE_PORTS.AUTH_SERVICE}`;
    } 
+
+   @Post('/register')
+    registerUser(@Body() body: { email: string }) {
+    return  this.authServiceService.simulateUserRegistration(body.email);
+   }
 }
