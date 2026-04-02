@@ -1,5 +1,5 @@
 
-import { IsDate, IsInt, IsNotEmpty, IsNumber, IsOptional , IsString, isString, max, MaxLength, Min } from "class-validator";
+import {  IsDateString, IsInt, IsNotEmpty, IsNumber, IsOptional , IsString, isString, max, MaxLength, Min } from "class-validator";
 
 
 export class CreateEventDto {
@@ -14,7 +14,7 @@ export class CreateEventDto {
     @IsString(  { message: "Description must be a string" })
     description? : string;
 
-    @IsDate({ message: "Date must be a valid date" })
+    @IsDateString({}, { message: "Date must be a valid ISO date" })
     @IsNotEmpty({ message: "Date is required" })
     date : string;
 

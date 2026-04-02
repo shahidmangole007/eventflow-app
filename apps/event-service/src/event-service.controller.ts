@@ -1,5 +1,4 @@
 import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post, Put, } from '@nestjs/common';
-
 import { CreateEventDto, UpdateEventDto } from '@app/common';
 import { EventServiceService } from './event-service.service';
 
@@ -7,12 +6,13 @@ import { EventServiceService } from './event-service.service';
 export class EventServiceController {
   constructor(private readonly eventsServiceService: EventServiceService) { }
 
+
   @Post()
   create(
     @Body() createEventDto: CreateEventDto,
     @Headers('x-user-id') userId: string,
   ) {
-    return this.eventsServiceService.create(createEventDto, userId);
+    return this.eventsServiceService.create(createEventDto, userId)
   }
 
   @Get()
@@ -21,13 +21,13 @@ export class EventServiceController {
   }
 
   @Get('my-events')
-  findMyEvent(@Headers('x-user-id') userId: string) {
-    return this.eventsServiceService.findMyEvent(userId);
+  findMyEvents(@Headers('x-user-id') userId: string) {
+    return this.eventsServiceService.findMyEvent(userId)
   }
 
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.eventsServiceService.findOne(id);
+    return this.eventsServiceService.findOne(id)
   }
 
   @Put(':id')
@@ -37,12 +37,7 @@ export class EventServiceController {
     @Headers('x-user-id') userId: string,
     @Headers('x-user-role') userRole: string,
   ) {
-    return this.eventsServiceService.update(
-      id,
-      updateEventDto,
-      userId,
-      userRole,
-    );
+    return this.eventsServiceService.update(id, updateEventDto, userId, userRole)
   }
 
   @Post(':id/publish')
@@ -50,8 +45,9 @@ export class EventServiceController {
     @Param('id', ParseUUIDPipe) id: string,
     @Headers('x-user-id') userId: string,
     @Headers('x-user-role') userRole: string,
+
   ) {
-    return this.eventsServiceService.publish(id, userId, userRole);
+    return this.eventsServiceService.publish(id, userId, userRole)
   }
 
   @Post(':id/cancel')
@@ -59,7 +55,11 @@ export class EventServiceController {
     @Param('id', ParseUUIDPipe) id: string,
     @Headers('x-user-id') userId: string,
     @Headers('x-user-role') userRole: string,
+
   ) {
-    return this.eventsServiceService.cancel(id, userId, userRole);
+    return this.eventsServiceService.cancel(id, userId, userRole)
   }
+
+
+
 }

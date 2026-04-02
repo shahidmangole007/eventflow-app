@@ -25,6 +25,7 @@ export class EventServiceService implements OnModuleInit {
   async create(createEventDto: CreateEventDto, orgnizerId: string) {
     const [event] = await this.dbService.db.insert(events).values({
       ...createEventDto,
+      // id : uuidv4(),
       date: new Date(createEventDto.date),
       price: createEventDto.price || 0,
       orgnizerId,
@@ -104,54 +105,55 @@ export class EventServiceService implements OnModuleInit {
 
   }
 
-  async publish(id: string, userId: string, userRole: string) {
-    const event = await this.findOne(id);
 
-    if (event.orgnizerId !== userId && userRole !== 'ADMIN') {
-      throw new ForbiddenException(
-        'You are not authorized to publish this event',
-      );
+  async publish(id : string , userId : string , userRole : string ){
+    const event =  await this.findOne(id);
+
+    if(event.orgnizerId !== userId && userRole !== 'ADMIN'){
+      throw new ForbiddenException('You are not authorized to publish this event');
     }
 
-    const [published] = await this.dbService.db
-      .update(events)
-      .set({ status: 'PUBLISHED', updatedAt: new Date() })
-      .where(eq(events.id, id))
-      .returning();
+    const [published]  = await this.dbService.db
+    .update(events)
+    .set({  status : 'PUBLISHED',updatedAt : new Date()})
+    .where(eq(events.id , id))
+    .returning();
 
     return published;
+    
   }
 
-  async cancel(id: string, userId: string, userRole: string) {
-    const event = await this.findOne(id);
 
-    if (event.orgnizerId !== userId && userRole !== 'ADMIN') {
-      throw new ForbiddenException(
-        'You are not authorized to cancel this event',
-      );
+  async cancel(id : string , userId : string , userRole : string){
+    const event =  await this.findOne(id);    
+    if(event.orgnizerId !== userId && userRole !== 'ADMIN'){
+      throw new ForbiddenException('You are not authorized to cancel this event');
     }
 
-    const [cancelled] = await this.dbService.db
-      .update(events)
-      .set({ status: 'CANCELLED', updatedAt: new Date() })
-      .where(eq(events.id, id))
-      .returning();
+    const [cancelled]  = await this.dbService.db
+    .update(events)
+    .set({  status : 'CANCELLED',updatedAt : new Date()})
+    .where(eq(events.id , id))
+    .returning();
 
-    this.kafkaClient.emit(KAFKA_TOPICS.EVENT_CANCELED, {
-      eventId: cancelled.id,
-      organizerId: cancelled.orgnizerId,
-      timestamp: new Date().toISOString(),
+    this.kafkaClient.emit(KAFKA_TOPICS.EVENT_CANCELED , {
+      eventId : cancelled.id,
+      organizerId : cancelled.orgnizerId,
+      timestamp : new Date().toISOString()
     });
 
     return cancelled;
+    
   }
 
-  async findMyEvent(orgnizerId: string) {
+
+  async findMyEvent( organizerId : string ){
     return this.dbService.db
-      .select()
-      .from(events)
-      .where(eq(events.orgnizerId, orgnizerId));
+    .select()
+    .from(events)
+    .where(eq(events.orgnizerId , organizerId));
   }
+
 
 
 }
