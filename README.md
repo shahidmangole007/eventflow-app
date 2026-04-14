@@ -1,98 +1,251 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+<div align="center">
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# ⚡ EventFlow
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+### A production-grade event management platform built with microservices architecture
 
-## Description
+[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Kafka](https://img.shields.io/badge/Apache%20Kafka-231F20?style=for-the-badge&logo=apachekafka&logoColor=white)](https://kafka.apache.org/)
+[![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+</div>
 
-## Project setup
+---
 
-```bash
-$ npm install
+## 📌 Overview
+
+**EventFlow** is a scalable, event-driven platform for managing events, tickets, and notifications. Built with a microservices architecture using NestJS, it demonstrates real-world patterns like async communication via Kafka, distributed caching with Redis, and type-safe data access using Drizzle ORM.
+
+---
+
+## 🏗️ Architecture
+
+```
+                        ┌─────────────────────┐
+                        │     API Gateway      │
+                        │  (Global Exception   │
+                        │Filter + Interceptors)│
+                        └────────┬────────────┘
+                                 │
+              ┌──────────────────┼──────────────────┐
+              │                  │                  │
+     ┌────────▼──────┐  ┌────────▼──────┐  ┌───────▼────────┐
+     │ Auth Service  │  │ Event Service │  │ Ticket Service │
+     │               │  │               │  │                │
+     │ JWT Auth      │  │ CRUD Events   │  │ Book Tickets   │
+     │ Role Guards   │  │ Redis Cache   │  │ Availability   │
+     └───────────────┘  └───────────────┘  └────────────────┘
+              │                  │                  │
+              └──────────────────▼──────────────────┘
+                          ┌──────────────┐
+                          │    Kafka     │
+                          │  (Message    │
+                          │   Broker)   │
+                          └──────┬───────┘
+                                 │
+                        ┌────────▼────────┐
+                        │Notification Svc │
+                        │                 │
+                        │ Email / Push    │
+                        │ Alerts          │
+                        └─────────────────┘
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## 🚀 Key Features
 
-# watch mode
-$ npm run start:dev
+### Microservices Architecture
+Decoupled logic split into **Auth**, **Events**, **Tickets**, and **Notification** services — each independently deployable and scalable.
 
-# production mode
-$ npm run start:prod
+### Event-Driven Communication
+**Apache Kafka** handles asynchronous workflows between services. For example, when a user books a ticket, the Ticket service produces a Kafka event which the Notification service consumes to trigger alerts — all without tight coupling.
+
+### Production-Grade Data Layer
+**PostgreSQL** with **Drizzle ORM** for fully type-safe, migration-tracked database interactions across all services.
+
+### Robust API Gateway
+A single entry point for all client requests featuring:
+- Global Exception Filters for consistent error responses
+- Response Interceptors for unified response structure
+- JWT authentication and role-based access control
+
+### Shared Microservices Library
+A custom internal package (`libs/`) shared across all services containing:
+- Common DTOs and interfaces
+- Shared utilities and helpers
+- Kafka topic constants
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | NestJS (Monorepo) |
+| Language | TypeScript |
+| Message Broker | Apache Kafka |
+| Cache | Redis |
+| Database | PostgreSQL |
+| ORM | Drizzle ORM |
+| Containerization | Docker & Docker Compose |
+| Auth | JWT (JSON Web Tokens) |
+
+---
+
+## 📁 Project Structure
+
+```
+eventflow-app/
+├── apps/
+│   ├── api-gateway/          # Central entry point, routing, global filters
+│   ├── auth-service/         # JWT auth, user management, role guards
+│   ├── event-service/        # Event CRUD, Redis caching
+│   ├── ticket-service/       # Ticket booking, availability management
+│   └── notification-service/ # Kafka consumer, email/push notifications
+├── libs/
+│   └── shared/               # Shared DTOs, interfaces, Kafka topics
+├── drizzle/
+│   └── migrations/           # Database migration files
+├── docker-compose.yaml        # Full stack local setup
+└── drizzle.config.ts         # Drizzle ORM configuration
 ```
 
-## Run tests
+---
+
+## ⚙️ Getting Started
+
+### Prerequisites
+
+Make sure you have the following installed:
+- [Node.js](https://nodejs.org/) (v18+)
+- [Docker](https://www.docker.com/) & Docker Compose
+
+### 1. Clone the repository
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+git clone https://github.com/shahidmangole007/eventflow-app.git
+cd eventflow-app
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 2. Set up environment variables
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 3. Start infrastructure with Docker
 
-## Resources
+```bash
+docker-compose up -d
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+This will spin up:
+- PostgreSQL database
+- Apache Kafka + Zookeeper
+- Redis cache
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 4. Install dependencies
 
-## Support
+```bash
+npm install
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### 5. Run database migrations
 
-## Stay in touch
+```bash
+npm run drizzle:migrate
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### 6. Start all services
 
-## License
+```bash
+# Start all microservices in watch mode
+npm run start:dev
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Or start individual services
+npm run start:dev auth-service
+npm run start:dev event-service
+npm run start:dev ticket-service
+npm run start:dev notification-service
+```
+
+---
+
+## 🔌 API Endpoints
+
+### Auth Service
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/auth/register` | Register a new user |
+| POST | `/auth/login` | Login and receive JWT token |
+| GET | `/auth/profile` | Get current user profile |
+
+### Event Service
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/events` | Get all events (cached in Redis) |
+| GET | `/events/:id` | Get event by ID |
+| POST | `/events` | Create a new event |
+| PUT | `/events/:id` | Update an event |
+| DELETE | `/events/:id` | Delete an event |
+
+### Ticket Service
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/tickets/book` | Book a ticket for an event |
+| GET | `/tickets/my-tickets` | Get user's booked tickets |
+| GET | `/tickets/:id` | Get ticket details |
+
+---
+
+## 📨 Kafka Topics
+
+| Topic | Producer | Consumer | Description |
+|---|---|---|---|
+| `ticket.booked` | Ticket Service | Notification Service | Triggered when a ticket is booked |
+| `event.created` | Event Service | Notification Service | Triggered when a new event is published |
+| `user.registered` | Auth Service | Notification Service | Triggered on new user signup |
+
+---
+
+## 🐳 Docker Compose Services
+
+```yaml
+Services started via docker-compose up:
+  - postgres      → Port 5432
+  - redis         → Port 6379
+  - zookeeper     → Port 2181
+  - kafka         → Port 9092
+```
+
+---
+
+## 🧠 Design Decisions
+
+**Why Kafka over direct HTTP calls?**
+Kafka decouples services so that if the Notification service goes down, no ticket booking is lost. Events are retained and processed when the service recovers — something synchronous HTTP calls can't guarantee.
+
+**Why Drizzle ORM over TypeORM?**
+Drizzle provides a more lightweight, fully type-safe SQL experience with excellent TypeScript inference. Migrations are predictable and the query builder stays close to raw SQL.
+
+**Why a shared `libs/` package?**
+Avoids DTO duplication across services. A single source of truth for interfaces means changes propagate instantly without copy-pasting across microservices.
+
+---
+
+## 👨‍💻 Author
+
+**Shahid Mangole**
+- GitHub: [@shahidmangole007](https://github.com/shahidmangole007)
+- LinkedIn: [linkedin.com/in/shahidmangole](https://linkedin.com/in/shahidmangole)
+
+---
+
+## 📄 License
+
+This project is [MIT licensed](LICENSE).
