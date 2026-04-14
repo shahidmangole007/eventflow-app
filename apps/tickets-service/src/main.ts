@@ -2,7 +2,6 @@ import { SERVICE_PORTS } from "@app/common";
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "apps/api-gateway/src/app.module";
-// import { AppModule } from './app.module';
 
 
 async function bootstrap() {
