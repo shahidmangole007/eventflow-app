@@ -20,6 +20,10 @@ export class TicketsServiceController {
     @Body() purchaseDto: PurchaseTicketDto,
     @Headers('x-user-id') userId: string,
   ) {
+
+      
+    console.log("Request at ticket service : " , purchaseDto , userId);
+    
     return this.ticketsServiceService.purchase(purchaseDto, userId);
   }
 

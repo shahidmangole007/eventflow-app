@@ -14,8 +14,8 @@ async function bootstrap() {
         transform: true,
       }));
   
-    await app.listen(process.env.port ?? SERVICE_PORTS.API_GATEWAY);
-    console.log(`Api Gateway Service is running on port ${process.env.PORT ?? SERVICE_PORTS.API_GATEWAY}`);
+    await app.listen(SERVICE_PORTS.API_GATEWAY);
+    console.log(`Api Gateway Service is running on port ${SERVICE_PORTS.API_GATEWAY}`);
   
 }
 bootstrap();

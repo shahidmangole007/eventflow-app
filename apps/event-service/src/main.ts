@@ -13,7 +13,7 @@ async function bootstrap() {
         transform: true,
       }));
   
-    await app.listen(process.env.port ?? SERVICE_PORTS.EVENT_SERVICE);
+    await app.listen( SERVICE_PORTS.EVENT_SERVICE);
     console.log(`Event Service is running on port ${SERVICE_PORTS.EVENT_SERVICE}`);
   
 }
