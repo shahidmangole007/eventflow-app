@@ -1,38 +1,35 @@
 # Dependencies
 node_modules
+apps/*/node_modules
+libs/*/node_modules
 
 # Build outputs
 dist
 
-# Version control
+# Git
 .git
 .gitignore
+
+# Env
+.env
+.env.*
 
 # IDE
 .vscode
 .idea
-*.swp
-*.swo
 
 # Logs
 *.log
 npm-debug.log*
 pnpm-debug.log*
 
-# Test files
-*.spec.ts
-test
+# Tests (optional)
 coverage
+test
 
-# Documentation
+# Docs
 docs
-*.md
-!README.md
 
-# Environment files
-.env
-.env.*
-
-# Misc
+# OS
 .DS_Store
 Thumbs.db

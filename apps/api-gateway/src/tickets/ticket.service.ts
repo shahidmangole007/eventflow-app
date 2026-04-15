@@ -5,21 +5,20 @@ import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class TicketService {
-  private readonly ticketServiceUrl = `http://localhost:${SERVICE_PORTS.TICKETS_SERVICE}`;
-    //  process.env.TICKETS_SERVICE_URL ||
-  
 
-  constructor(private readonly httpService: HttpService) {}
+  private readonly ticketServiceUrl = process.env.TICKET_SERVICE_URL || `http://localhost:${SERVICE_PORTS.TICKETS_SERVICE}`;
+
+  constructor(private readonly httpService: HttpService) { }
 
   async purchase(
     data: PurchaseTicketDto,
     userId: string,
-  ): Promise<TicketResponse[]> { 
+  ): Promise<TicketResponse[]> {
     try {
 
 
-      console.log("ticket api gateway service :" , data , userId);
-      
+      console.log("ticket api gateway service :", data, userId);
+
 
 
       const response = await firstValueFrom(

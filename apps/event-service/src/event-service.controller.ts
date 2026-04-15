@@ -6,7 +6,7 @@ import { EventServiceService } from './event-service.service';
 export class EventServiceController {
   constructor(private readonly eventsServiceService: EventServiceService) { }
 
-
+ 
   @Post()
   create(
     @Body() createEventDto: CreateEventDto,

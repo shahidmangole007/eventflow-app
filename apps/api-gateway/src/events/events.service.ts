@@ -1,19 +1,21 @@
-import { SERVICE_PORTS } from "@app/common";
+import { CreateEventDto, EventResponse, SERVICE_PORTS, UpdateEventDto } from "@app/common";
 import { HttpService } from "@nestjs/axios";
 import { HttpException, Injectable } from "@nestjs/common";
 import { firstValueFrom } from "rxjs";
 
 @Injectable()
 export class EventsService {
-    private readonly eventServiceUrl = `http://localhost:${SERVICE_PORTS.EVENT_SERVICE}`;
+
+    private readonly eventServiceUrl = process.env.EVENT_SERVICE_URL || `http://localhost:${SERVICE_PORTS.EVENT_SERVICE}`;
+
 
     constructor(private readonly httpService: HttpService) { }
 
-    async create(data: object, userId: string, userRole: string) {
+    async create(data: CreateEventDto, userId: string, userRole: string): Promise<EventResponse> {
         try {
 
             const response = await firstValueFrom(
-                this.httpService.post(`${this.eventServiceUrl}`, data, {
+                this.httpService.post<EventResponse>(`${this.eventServiceUrl}`, data, {
                     headers: { 'x-user-id': userId, 'x-user-role': userRole },
                 })
             )
@@ -26,10 +28,10 @@ export class EventsService {
     }
 
 
-    async findAll() {
+    async findAll(): Promise<EventResponse[]> {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.eventServiceUrl}`)
+                this.httpService.get<EventResponse[]>(`${this.eventServiceUrl}`)
             )
             return response.data;
 
@@ -38,10 +40,10 @@ export class EventsService {
         }
     }
 
-    async findMyevents(userId: string) {
+    async findMyevents(userId: string): Promise<EventResponse[]> {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.eventServiceUrl}/my-events`, {
+                this.httpService.get<EventResponse[]>(`${this.eventServiceUrl}/my-events`, {
                     headers: { 'x-user-id': userId }
                 })
             )
@@ -52,10 +54,10 @@ export class EventsService {
         }
     }
 
-    async findOne(id: string) {
+    async findOne(id: string): Promise<EventResponse> {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.eventServiceUrl}/${id}`)
+                this.httpService.get<EventResponse>(`${this.eventServiceUrl}/${id}`)
             )
             return response.data;
 
@@ -65,11 +67,11 @@ export class EventsService {
     }
 
 
-    async update(id: string, data: object, userId: string, userRole: string) {
+    async update(id: string, data: UpdateEventDto, userId: string, userRole: string): Promise<EventResponse> {
         try {
 
             const response = await firstValueFrom(
-                this.httpService.put(`${this.eventServiceUrl}/${id}`, data, {
+                this.httpService.put<EventResponse>(`${this.eventServiceUrl}/${id}`, data, {
                     headers: { 'x-user-id': userId, 'x-user-role': userRole },
                 })
             )
@@ -82,11 +84,11 @@ export class EventsService {
     }
 
 
-    async publish(id: string,  userId: string, userRole: string) {
+    async publish(id: string, userId: string, userRole: string): Promise<EventResponse> {
         try {
 
             const response = await firstValueFrom(
-                this.httpService.post(`${this.eventServiceUrl}/${id}/publish`,
+                this.httpService.post<EventResponse>(`${this.eventServiceUrl}/${id}/publish`,
                     {},
                     {
                         headers:
@@ -103,7 +105,7 @@ export class EventsService {
         }
     }
 
-    async cancel(id: string,  userId: string, userRole: string) {
+    async cancel(id: string, userId: string, userRole: string) {
         try {
 
             const response = await firstValueFrom(
@@ -143,7 +145,7 @@ export class EventsService {
 
 
 
-    private handleError(error: unknown) {
+    private handleError(error: unknown): never {
         const err = error as {
             response?: { data: string | object; status: number };
         };

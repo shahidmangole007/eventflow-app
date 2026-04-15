@@ -1,29 +1,31 @@
-import { SERVICE_PORTS } from '@app/common';
+import { AuthResponse, SERVICE_PORTS, UserProfileResponse } from '@app/common';
 import { HttpService } from '@nestjs/axios';
 import { HttpException, Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthService {
-    private readonly authServiceUrl = `http://localhost:${SERVICE_PORTS.AUTH_SERVICE}`;
+
+    private readonly authServiceUrl = process.env.AUTH_SERVICE_URL || `http://localhost:${SERVICE_PORTS.AUTH_SERVICE}`;
 
     constructor(private readonly httpService: HttpService) { }
 
-    async register(data: { name: string, email: string, password: string }) {
+    async register(data: { name: string, email: string, password: string }): Promise<UserProfileResponse> {
         try {
-            const responce = await firstValueFrom(this.httpService.post(`${this.authServiceUrl}/register`, data))
+            const responce = await firstValueFrom(this.httpService.post<UserProfileResponse>(`${this.authServiceUrl}/register`, data))
             return responce.data;
         } catch (error) {
             this.handleError(error);
         }
     }
 
-    async login(data: { email: string, password: string }) {
+    async login(data: { email: string, password: string }) : Promise<AuthResponse>  {
         try {
-            const responce = await firstValueFrom(this.httpService.post(`${this.authServiceUrl}/login`, data))
+            const responce = await firstValueFrom(this.httpService.post<AuthResponse>(`${this.authServiceUrl}/login`, data))
             return responce.data;
         } catch (error) {
             this.handleError(error);
+            throw error;
         }
     }
 
@@ -42,13 +44,13 @@ export class AuthService {
     }
 
 
-    private handleError(error: unknown) {
-        const err = error as {
-            response?: { data: string | object; status: number };
-        };
-        if (err.response) {
-            throw new HttpException(err.response.data, err.response.status);
-        }
-        throw new HttpException('Something went wrong', 503);
+  private handleError(error: unknown): never {
+    const err = error as {
+      response?: { data: string | object; status: number };
+    };
+    if (err.response) {
+      throw new HttpException(err.response.data, err.response.status);
     }
+    throw new HttpException('Something went wrong', 503);
+  }
 }
