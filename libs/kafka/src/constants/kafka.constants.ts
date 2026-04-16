@@ -2,7 +2,6 @@
 export const KAFKA_BROKER = process.env.KAFKA_BROKER || 'localhost:9093';
 export const KAFKA_CLIENT_ID = 'eventflow-app';
 export const KAFKA_CONSUMER_GROUP = 'eventflowapp-consumer';
-export const KAFKA_SERVICE = 'KAFKA_SERVICE';
 
 
 // Kafka Topics
