@@ -6,20 +6,25 @@ import { DatabaseModule } from '@app/database';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
-import { ConfigModule } from '@nestjs/config'; 
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
-@Module({ 
+@Module({
   imports: [
-    ConfigModule.forRoot({isGlobal : true}),
-    KafkaModule.register("auth-service-group"),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    KafkaModule.register('auth-service-group'),
     DatabaseModule,
-    PassportModule, 
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'secretKey',
-      signOptions: { expiresIn: '1d' },
-    }), 
+    PassportModule,
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET') || 'secretKey',
+        signOptions: { expiresIn: '1d' },
+      }),
+    }),
   ],
   controllers: [AuthServiceController],
-  providers: [AuthServiceService , JwtStrategy],
+  providers: [AuthServiceService, JwtStrategy],
 })
 export class AuthServiceModule {}
