@@ -12,10 +12,12 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-    }));
+    }),
+  );
 
-  await app.listen( SERVICE_PORTS.TICKETS_SERVICE);
-  console.log(`Ticket Service is running on port ${ SERVICE_PORTS.TICKETS_SERVICE}`);
+  const port = process.env.PORT || SERVICE_PORTS.TICKETS_SERVICE;
 
+  await app.listen(port);
+  console.log(`Ticket Service running on port ${port}`);
 }
 bootstrap();

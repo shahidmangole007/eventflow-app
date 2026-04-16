@@ -35,7 +35,7 @@ export class AuthServiceService implements OnModuleInit {
       throw new ConflictException('User already exists');
     }
 
-    // hash password
+    // hash password 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // create user

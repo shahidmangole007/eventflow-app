@@ -59,10 +59,14 @@ async function bootstrap() {
 
   // start microservices  (kafka consumer)
   await app.startAllMicroservices()
-  await app.listen(SERVICE_PORTS.NOTIFICATIONS_SERVICE);
-  console.log(`Notifications Service is running on port ${SERVICE_PORTS.NOTIFICATIONS_SERVICE}`);
-  console.log('Notification service started');
+  const port = process.env.PORT || SERVICE_PORTS.NOTIFICATIONS_SERVICE;
+  
+  await app.listen(port);
+  console.log(`Notifications Service running on port ${port}`);
 
 }
 bootstrap();
+
+
+
 

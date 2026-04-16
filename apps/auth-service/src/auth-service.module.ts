@@ -6,12 +6,14 @@ import { DatabaseModule } from '@app/database';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
+import { ConfigModule } from '@nestjs/config'; 
 
-@Module({
+@Module({ 
   imports: [
+    ConfigModule.forRoot({isGlobal : true}),
     KafkaModule.register("auth-service-group"),
     DatabaseModule,
-    PassportModule,
+    PassportModule, 
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'secretKey',
       signOptions: { expiresIn: '1d' },

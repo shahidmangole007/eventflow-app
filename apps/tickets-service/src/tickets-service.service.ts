@@ -11,7 +11,7 @@ import { Kafka } from 'kafkajs';
 export class TicketsServiceService implements OnModuleInit {
 
   constructor(
-    @Inject(KAFKA_SERVICE) private kafkaClient: ClientKafka,
+    @Inject(KAFKA_SERVICE) private readonly kafkaClient: ClientKafka,
     private readonly dbService: DatabaseService
   ) { }
 
