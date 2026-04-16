@@ -42,7 +42,9 @@ async function bootstrap() {
         brokers: [kafkaBroker],
 
         ...(useAuth && {
-          ssl: true,
+          ssl: {
+            rejectUnauthorized: false,
+          },
           sasl: {
             mechanism: 'plain',
             username: kafkaUsername,
@@ -60,7 +62,7 @@ async function bootstrap() {
   // start microservices  (kafka consumer)
   await app.startAllMicroservices()
   const port = process.env.PORT || SERVICE_PORTS.NOTIFICATIONS_SERVICE;
-  
+
   await app.listen(port);
   console.log(`Notifications Service running on port ${port}`);
 
