@@ -13,7 +13,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 
-RUN npm run build ${SERVICE}
+RUN npm run build -- --all
 
 # Production stage
 FROM node:20-alpine AS runner
@@ -29,4 +29,3 @@ COPY --from=builder /app/dist ./dist
 
 
 CMD ["sh", "-c", "node dist/apps/${SERVICE}/main.js"]
-
