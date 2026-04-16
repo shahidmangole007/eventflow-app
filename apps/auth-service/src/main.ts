@@ -21,7 +21,7 @@ async function bootstrap() {
   const port = process.env.PORT || SERVICE_PORTS.AUTH_SERVICE;
 
   await app.listen(port);
-  console.log(`Event Service running on port ${port}`);
+  console.log(`Auth Service running on port ${port}`);
 }
 bootstrap();
 
