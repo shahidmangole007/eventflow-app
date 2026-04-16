@@ -8,7 +8,7 @@
             super({
                 jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
                 ignoreExpiration: false,
-                secretOrKey: process.env.JWT_SECRET_KEY || 'secretKey',
+                secretOrKey: process.env.JWT_SECRET || 'secretKey',
             });
 
         }  
