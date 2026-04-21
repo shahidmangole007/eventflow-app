@@ -4,6 +4,10 @@ import { SERVICE_PORTS } from '@app/common';
 import { ValidationPipe } from '@nestjs/common';
 import { TicketsServiceModule } from './tickets-service.module';
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+console.log('KAFKA_BROKER =', process.env.KAFKA_BROKER);
+
 async function bootstrap() {
   const app = await NestFactory.create(TicketsServiceModule);
 

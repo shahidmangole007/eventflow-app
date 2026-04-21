@@ -5,7 +5,8 @@ import { KafkaModule } from '@app/kafka';
 import { DatabaseModule } from '@app/database';
 
 @Module({
-  imports: [KafkaModule.register('tickets-service-group'), DatabaseModule],
+
+    imports: [KafkaModule.register('tickets-service-group'),DatabaseModule],
   controllers: [TicketsServiceController],
   providers: [TicketsServiceService],
 })

@@ -24,9 +24,9 @@ export class EventsContoller {
     // public  
     @Get(':id')
     findOne(@Param('id', ParseUUIDPipe) id: string) {
-        return this.eventsService.findOne(id)
+        return this.eventsService.findOne(id) 
     }
-
+ 
     // protected - create event
     @UseGuards(AuthGuard('jwt'))
     @Post()
@@ -34,6 +34,8 @@ export class EventsContoller {
         @Body() createEventDto : CreateEventDto ,
         @Request() req: { user: { userId: string ; role? : string } }
     ) {
+
+    
         return this.eventsService.create(
             createEventDto , 
             req.user.userId , 

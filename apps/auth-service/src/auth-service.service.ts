@@ -48,14 +48,13 @@ export class AuthServiceService implements OnModuleInit {
     this.kafkaClient.emit(KAFKA_TOPICS.USER_REGISTERED, {
       userId: user.id,
       email: user.email,
-      name : user.name,
+      name: user.name,
       timestamp: new Date().toISOString()
     })
 
     return { message: 'User registered successfully', userId: user.id };
 
   }
-
 
   async login(email: string, password: string) {
 
@@ -65,47 +64,42 @@ export class AuthServiceService implements OnModuleInit {
       .where(eq(users.email, email))
       .limit(1);
 
-    if(!user || !(await bcrypt.compare(password , user.password))){
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const token = this.jwtService.sign({ sub: user.id, email: user.email, role: user.role });
 
-
-    this.kafkaClient.emit(KAFKA_TOPICS.USER_LOGIN , {
-      userId : user.id,
-      timestamp : new Date().toISOString()
+    this.kafkaClient.emit(KAFKA_TOPICS.USER_LOGIN, {
+      userId: user.id,
+      timestamp: new Date().toISOString()
     });
 
-
     return {
-      access_token : token,
-      user : {
-        id : user.id, 
-        name : user.name, 
-        email : user.email,
-        role : user.role
+      access_token: token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
       },
     };
 
   }
 
-
   async getProfile(userId: string) {
     const [user] = await this.dbService.db
       .select({
-        id : users.id,
-        email : users.email,
-        name : users.name,
-        role : users.role,
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
       })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
 
-
-
-    if(!user){
+    if (!user) {
       throw new UnauthorizedException('User not found');
     }
 

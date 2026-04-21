@@ -15,16 +15,25 @@ import { CheckInTicketDto, PurchaseTicketDto } from '@app/common';
 export class TicketsServiceController {
   constructor(private readonly ticketsServiceService: TicketsServiceService) { }
 
-  @Post('purchase')
+  // @Post('purchase')
+  // purchase(
+  //   @Body() purchaseDto: PurchaseTicketDto,
+  //   @Headers('x-user-id') userId: string,
+  // ) {
+
+  //   console.log("Request at ticket service : " , purchaseDto , userId);
+  //   return this.ticketsServiceService.purchase(purchaseDto, userId);
+  // }
+
+  @Post('purchase') 
   purchase(
     @Body() purchaseDto: PurchaseTicketDto,
     @Headers('x-user-id') userId: string,
+    @Headers('idempotency-key') idempotencyKey: string,
   ) {
 
-      
-    console.log("Request at ticket service : " , purchaseDto , userId);
-    
-    return this.ticketsServiceService.purchase(purchaseDto, userId);
+    console.log("Request at ticket service : " , purchaseDto , userId , idempotencyKey);
+    return this.ticketsServiceService.purchase(purchaseDto, userId , idempotencyKey);
   }
 
   @Get('my-tickets')

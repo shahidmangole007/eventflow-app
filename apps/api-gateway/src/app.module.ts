@@ -7,13 +7,21 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { TicketsModule } from './tickets/ticket.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
  
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal :true
+    }),
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'secret'
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET') || 'secretKey',
+        signOptions: { expiresIn: '1d' },
+      }),
     }),
     AuthModule,
     EventsModule,

@@ -3,6 +3,11 @@ import { EventServiceModule } from './event-service.module';
 import { SERVICE_PORTS } from '@app/common';
 import { ValidationPipe } from '@nestjs/common';
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+console.log('KAFKA_BROKER =', process.env.KAFKA_BROKER);
+
+
 async function bootstrap() {
   const app = await NestFactory.create(EventServiceModule);
 

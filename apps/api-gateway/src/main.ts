@@ -19,6 +19,6 @@ async function bootstrap() {
   const port = process.env.PORT || SERVICE_PORTS.API_GATEWAY;
 
   await app.listen(port);
-  console.log(`Event Service running on port ${port}`);
+  console.log(`Api Gateway  running on port ${port}`);
 }
 bootstrap();

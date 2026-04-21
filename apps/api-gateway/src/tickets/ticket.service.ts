@@ -13,12 +13,12 @@ export class TicketService {
   async purchase(
     data: PurchaseTicketDto,
     userId: string,
+    idempotencyKey : string
   ): Promise<TicketResponse[]> {
     try {
 
 
-      console.log("ticket api gateway service :", data, userId);
-
+      console.log("ticket api gateway service :", data, userId , idempotencyKey);
 
 
       const response = await firstValueFrom(
@@ -26,7 +26,8 @@ export class TicketService {
           `${this.ticketServiceUrl}/purchase`,
           data,
           {
-            headers: { 'x-user-id': userId },
+            headers: { 'x-user-id': userId  , 'idempotency-key' : idempotencyKey},
+
           },
         ),
       );

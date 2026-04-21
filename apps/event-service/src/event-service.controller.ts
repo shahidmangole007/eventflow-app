@@ -2,16 +2,19 @@ import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post, Put, } from
 import { CreateEventDto, UpdateEventDto } from '@app/common';
 import { EventServiceService } from './event-service.service';
 
+
 @Controller()
 export class EventServiceController {
   constructor(private readonly eventsServiceService: EventServiceService) { }
 
- 
+  
   @Post()
   create(
     @Body() createEventDto: CreateEventDto,
     @Headers('x-user-id') userId: string,
   ) {
+    console.log("CREATE EVENT" , CreateEventDto , userId);
+    
     return this.eventsServiceService.create(createEventDto, userId)
   }
 

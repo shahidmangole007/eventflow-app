@@ -1,8 +1,9 @@
 import { PurchaseTicketDto } from '@app/common/dto/purchase-ticket.dto';
-import { DatabaseService, events, tickets } from '@app/database';
+import { DatabaseService, events, eventStatusEnum, idempotency_keys, idempotencyStatusEnum, tickets } from '@app/database';
 import { KAFKA_SERVICE, KAFKA_TOPICS } from '@app/kafka';
-import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
+import { table } from 'console';
 import { randomBytes } from 'crypto';
 import { and, eq, sql } from 'drizzle-orm';
 import { Kafka } from 'kafkajs';
@@ -23,79 +24,214 @@ export class TicketsServiceService implements OnModuleInit {
     return randomBytes(6).toString('hex').toUpperCase();
   }
 
-  async purchase(purchaseDto: PurchaseTicketDto, userId: string) {
-    const { eventId, quantity } = purchaseDto;
+  // async purchase(purchaseDto: PurchaseTicketDto, userId: string) {
+  //   const { eventId, quantity } = purchaseDto;
 
-    const [event] = await this.dbService.db
+  //   const [event] = await this.dbService.db
+  //     .select()
+  //     .from(events)
+  //     .where(eq(events.id, eventId))
+  //     .limit(1);
+
+  //   if (!event) {
+  //     throw new NotFoundException('Event not found');
+  //   }
+
+  //   if (event.status !== 'PUBLISHED') {
+  //     throw new BadRequestException('Event is not published');
+  //   }
+
+  //   const soldTickets = await this.dbService.db
+  //     .select({ total: sql<number>`COALESCE(SUM(${tickets.quantity}) , 0)` })
+  //     .from(tickets)
+  //     .where(
+  //       and(
+  //         eq(tickets.eventId, eventId),
+  //         eq(tickets.status, 'CONFIRMED'),
+
+  //       )
+  //     );
+
+  //   const currentSold = Number(soldTickets[0]?.total || 0);
+  //   const remaining = event.capacity - currentSold;
+
+  //   if (remaining < quantity) {
+  //     throw new BadRequestException(`Only ${remaining} tickets remaining`);
+  //   }
+
+
+  //   const totalPrice = event.price * quantity;
+
+  //   const [ticket] = await this.dbService.db.insert(tickets)
+  //     .values({
+  //       eventId,
+  //       userId,
+  //       quantity,
+  //       totalPrice,
+  //       ticketCode: this.generateTicketCode(),
+  //       status: 'CONFIRMED'
+  //     })
+  //     .returning();
+
+
+  //   this.kafkaClient.emit(KAFKA_TOPICS.TICKET_PURCHASED, {
+  //     ticketId: ticket.id,
+  //     eventId: ticket.eventId,
+  //     userId: ticket.userId,
+  //     quantity: ticket.quantity,
+  //     totalPrice: ticket.totalPrice,
+  //     ticketCode: ticket.ticketCode,
+  //     timestamp: new Date().toISOString(),
+
+  //   })
+
+  //   return {
+  //     message: 'Ticket purchased successfully',
+  //     ticket: {
+  //       id: ticket.id,
+  //       ticketCode: ticket.ticketCode,
+  //       eventTicket: event.title,
+  //       quantity: ticket.quantity,
+  //       totalPrice: ticket.totalPrice,
+  //       purchasedAt: new Date().toISOString(),
+  //     }
+  //   }
+  // }
+
+  async purchase(purchaseDto: PurchaseTicketDto, userId: string, idempotencyKey: string) {
+
+    const { eventId, quantity } = purchaseDto
+
+    const [existing] = await this.dbService.db
       .select()
-      .from(events)
-      .where(eq(events.id, eventId))
+      .from(idempotency_keys)
+      .where(eq(idempotency_keys.key, idempotencyKey))
       .limit(1);
 
-    if (!event) {
-      throw new NotFoundException('Event not found');
-    }
-
-    if (event.status !== 'PUBLISHED') {
-      throw new BadRequestException('Event is not published');
-    }
-
-    const soldTickets = await this.dbService.db
-      .select({ total: sql<number>`COALESCE(SUM(${tickets.quantity}) , 0)` })
-      .from(tickets)
-      .where(
-        and(
-          eq(tickets.eventId, eventId),
-          eq(tickets.status, 'CONFIRMED'),
-
-        )
-      );
-
-    const currentSold = Number(soldTickets[0]?.total || 0);
-    const remaining = event.capacity - currentSold;
-
-    if (remaining < quantity) {
-      throw new BadRequestException(`Only ${remaining} tickets remaining`);
-    }
-
-
-    const totalPrice = event.price * quantity;
-
-    const [ticket] = await this.dbService.db.insert(tickets)
-      .values({
-        eventId,
-        userId,
-        quantity,
-        totalPrice,
-        ticketCode: this.generateTicketCode(),
-        status: 'CONFIRMED'
-      })
-      .returning();
-
-
-    this.kafkaClient.emit(KAFKA_TOPICS.TICKET_PURCHASED, {
-      ticketId: ticket.id,
-      eventId: ticket.eventId,
-      userId: ticket.userId,
-      quantity: ticket.quantity,
-      totalPrice: ticket.totalPrice,
-      ticketCode: ticket.ticketCode,
-      timestamp: new Date().toISOString(),
-
-    })
-
-    return {
-      message: 'Ticket purchased successfully',
-      ticket: {
-        id: ticket.id,
-        ticketCode: ticket.ticketCode,
-        eventTicket: event.title,
-        quantity: ticket.quantity,
-        totalPrice: ticket.totalPrice,
-        purchasedAt: new Date().toISOString(),
+    if (existing) {
+      if (existing.status === 'SUCCESS') {
+        return existing.response;
+      }
+      if (existing.status === 'IN_PROGRESS') {
+        throw new BadRequestException('Request already in process')
       }
     }
+
+    try {
+      await this.dbService.db
+        .insert(idempotency_keys)
+        .values({
+          key: idempotencyKey,
+          status: 'IN_PROGRESS'
+        });
+    } catch (error) {
+      const [existing] = await this.dbService.db
+        .select()
+        .from(idempotency_keys)
+        .where(eq(idempotency_keys.key, idempotencyKey))
+        .limit(1)
+
+      if (existing.status === 'SUCCESS') return existing.response;
+
+      throw new BadRequestException('Duplicate Request');
+    }
+
+    try {
+      const result = await this.dbService.db.transaction(async (tx) => {
+
+        const eventResult = await tx.execute(sql`
+            SELECT * FROM events
+            WHERE id = ${eventId}
+            FOR UPDATE`
+        );
+
+        const event = eventResult.rows[0]
+
+        if (!event) throw new NotFoundException('Event not found');
+        if (event.status !== 'PUBLISHED') {
+          throw new BadRequestException('Event not published')
+        }
+
+        const soldResults = await tx.execute(sql`
+          SELECT COALESCE(SUM(quantity), 0) as total
+          FROM tickets
+          WHERE event_id =  ${eventId}
+          AND status  = 'CONFIRMED'
+        `);
+
+        const currentSold = Number(soldResults.rows[0].total);
+        const remaining = event.capacity - currentSold;
+
+        if (remaining < quantity) {
+          throw new BadRequestException(`Only ${remaining} tickets left`)
+        }
+
+        const totalPrice = event.price * quantity;
+
+        const [ticket] = await tx.insert(tickets)
+          .values({
+            eventId,
+            userId,
+            quantity,
+            totalPrice,
+            ticketCode: this.generateTicketCode(),
+            status: 'CONFIRMED'
+          })
+          .returning();
+
+        return {
+          ticket,
+          event
+        };
+      });
+
+      const response = {
+        ticket: {
+          id: result.ticket.id,
+          ticketCode: result.ticket.ticketCode,
+          eventTicket: result.event.title,
+          quantity: result.ticket.quantity,
+          totalPrice: result.ticket.totalPrice,
+          purchasedAt: new Date().toISOString(),
+        },
+        message: 'Ticket purchased successfully'
+      }
+
+
+      await this.dbService.db.update(idempotency_keys)
+        .set({
+          status: 'SUCCESS',
+          response
+        })
+        .where(eq(idempotency_keys.key, idempotencyKey));
+
+      this.kafkaClient.emit(KAFKA_TOPICS.TICKET_PURCHASED, {
+        ticketId: result.ticket.id,
+        eventId: result.ticket.eventId,
+        userId: result.ticket.userId,
+        quantity: result.ticket.quantity,
+        totalPrice: result.ticket.totalPrice,
+        ticketCode: result.ticket.ticketCode,
+        timestamp: new Date().toISOString(),
+      })
+
+      return response;
+ 
+
+
+    } catch (error) {
+        await this.dbService.db.update(idempotency_keys)
+        .set({status : 'FAILED'})
+        .where(eq(idempotency_keys.key , idempotencyKey))
+        
+        throw error
+    }
+
   }
+
+
+
+
 
   async findMyTicket(userId: string) {
     const userTickets = await this.dbService.db

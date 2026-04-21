@@ -6,7 +6,7 @@ import { AuthGuard } from '@nestjs/passport';
 @Controller()
 export class AuthServiceController {
   constructor(private readonly authServiceService: AuthServiceService) {}
- 
+  
   @Post('register')
   async register(@Body() dto : RegisterDto ) {
     console.log(dto);

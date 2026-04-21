@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Request, UseGuards,ParseUUIDPipe,} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Request, UseGuards,ParseUUIDPipe, Headers,} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TicketService } from './ticket.service';
 import { PurchaseTicketDto, CheckInTicketDto } from '@app/common';
@@ -12,9 +12,10 @@ export class TicketController {
   purchase(
     @Body() purchaseDto: PurchaseTicketDto,
     @Request() req: { user: { userId: string } },
+    @Headers('idempotency-key') idempotencyKey: string,
   ) {
   
-    return this.ticketsService.purchase(purchaseDto, req.user.userId);
+    return this.ticketsService.purchase(purchaseDto, req.user.userId , idempotencyKey);
   }
 
   @Get('my-tickets')
