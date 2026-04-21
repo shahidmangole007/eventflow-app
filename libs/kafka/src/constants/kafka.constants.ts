@@ -31,6 +31,11 @@ export const KAFKA_TOPICS = {
     SEND_EMAIL: 'notification.send-email',
     SEND_SMS: 'notification.send-sms',
     SEND_PUSH: 'notification.send-push',
+    
+    // Notification retry & DLQ
+    EMAIL_RETRY: 'notification.email-retry',
+    EMAIL_DLQ: 'notification.email-dlq',
+
 } as const;
 
 

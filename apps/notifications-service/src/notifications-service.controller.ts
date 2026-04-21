@@ -5,16 +5,18 @@ import { KAFKA_TOPICS } from '@app/kafka';
 
 @Controller()
 export class NotificationsServiceController {
+  private readonly logger = new Logger(NotificationsServiceController.name);
 
-  private readonly logger = new Logger(NotificationsServiceService.name);
-  constructor(private readonly notificationsServiceService: NotificationsServiceService) { }
+  constructor(
+    private readonly notificationsServiceService: NotificationsServiceService,
+  ) {}
 
   @Get('health')
   healthCheck() {
     return {
       status: 'ok',
-      service: 'notification-service'
-    }
+      service: 'notification-service',
+    };
   }
 
   @EventPattern(KAFKA_TOPICS.USER_REGISTERED)
@@ -26,18 +28,13 @@ export class NotificationsServiceController {
   }
 
   @EventPattern(KAFKA_TOPICS.TICKET_PURCHASED)
-  async handleTicketPurchased(
-    @Payload()
-    data: {
-      ticketId: string;
-      ticketCode: string;
-      userId: string;
-      quantity: number;
-      totalPrice: number;
-    },
-  ) {
-    this.logger.log(`Received ticket purchase event: ${JSON.stringify(data)}`);
-    await this.notificationsServiceService.sendTicketPurchasedEmail(data);
+  async handleTicketPurchased(@Payload() data: any) {
+    try {
+      this.logger.log(`Received ticket purchase event: ${JSON.stringify(data)}`);
+      await this.notificationsServiceService.sendTicketPurchasedEmail(data);
+    } catch (error) {
+      await this.notificationsServiceService.retryOrDLQ(data, error);
+    }
   }
 
   @EventPattern(KAFKA_TOPICS.TICKETS_CANCELED)
@@ -50,5 +47,19 @@ export class NotificationsServiceController {
     await this.notificationsServiceService.sendTicketCancelledEmail(data);
   }
 
+  @EventPattern(KAFKA_TOPICS.EMAIL_RETRY)
+  async handleEmailRetry(@Payload() data: any) {
+    try {
+      this.logger.log(`Retry attempt ${data.retryCount}`);
+      await this.notificationsServiceService.sendTicketPurchasedEmail(data);
+    } catch (error) {
+      await this.notificationsServiceService.retryOrDLQ(data, error);
+    }
+  }
 
+  @EventPattern(KAFKA_TOPICS.EMAIL_DLQ)
+  async handleDLQ(@Payload() data: any) {
+    this.logger.error(`DLQ event received: ${JSON.stringify(data)}`);
+    await this.notificationsServiceService.handleDLQ(data);
+  }
 }

@@ -1,19 +1,26 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EmailService } from './email.service';
+import { ClientKafka } from '@nestjs/microservices';
+import { KAFKA_SERVICE, KAFKA_TOPICS } from '@app/kafka';
+import { failed_events } from '@app/database/schema/failed_events';
+import { DatabaseService } from '@app/database';
 
 @Injectable()
 export class NotificationsServiceService {
   private readonly logger = new Logger(NotificationsServiceService.name);
+  private readonly MAX_RETRIES = 3;
 
-  constructor(private readonly emailService: EmailService) {}
+  constructor(
+    private readonly emailService: EmailService,
+    private readonly dbService: DatabaseService,
+    @Inject(KAFKA_SERVICE) private readonly kafkaClient: ClientKafka,
+  ) {}
 
   async sendWelcomeEmail(data: {
     userId: string;
     email: string;
     name: string;
   }) {
-    this.logger.log(`Sending welcome email to ${data.email}`);
-
     const html = `
       <h1>Welcome to EventFlow, ${data.name}! 🎉</h1>
       <p>Your account has been created successfully.</p>
@@ -41,8 +48,7 @@ export class NotificationsServiceService {
     quantity: number;
     totalPrice: number;
   }) {
-    const email = data.email || 'user@example.com'; // Fallback for demo
-    this.logger.log(`Sending ticket confirmation to ${email}`);
+    const email = data.email || 'user@example.com';
 
     const html = `
       <h1>Ticket Confirmed!</h1>
@@ -65,7 +71,6 @@ export class NotificationsServiceService {
     email?: string;
   }) {
     const email = data.email || 'user@example.com';
-    this.logger.log(`Sending cancellation notice to ${email}`);
 
     const html = `
       <h1>Ticket Cancelled</h1>
@@ -76,11 +81,32 @@ export class NotificationsServiceService {
     await this.emailService.sendEmail(email, 'Ticket Cancelled', html);
   }
 
-  sendEventCancelledEmail(data: {
-    eventId: string;
-    eventTitle?: string;
-    organizerId: string;
-  }) {
-    this.logger.log(`Sending event cancellation notice to ${data.organizerId}`);
+  async retryOrDLQ(data: any, error: any) {
+    const retryCount = data.retryCount ?? 0;
+
+    if (retryCount < this.MAX_RETRIES) {
+      this.logger.warn(`Retrying... attempt ${retryCount + 1}`);
+
+      await this.kafkaClient.emit(KAFKA_TOPICS.EMAIL_RETRY, {
+        ...data,
+        retryCount: retryCount + 1,
+      });
+    } else {
+      this.logger.error('Retry exhausted → sending to DLQ');
+
+      await this.kafkaClient.emit(KAFKA_TOPICS.EMAIL_DLQ, {
+        ...data,
+        error: error?.message || 'Unknown error',
+        failedAt: new Date().toISOString(),
+      });
+    }
+  }
+
+  async handleDLQ(data: any) {
+    await this.dbService.db.insert(failed_events).values({
+      payload: data,
+      error: data.error || 'Email failed after retries',
+      retries: data.retryCount ?? 3,
+    });
   }
 }
